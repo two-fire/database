@@ -1,0 +1,117 @@
+﻿/*
+作业五 99语法
+▪ 使用99语法更改相应作业：
+▪ --1．列出所有雇员的姓名及其上级的姓名。
+▪ --2．列出入职日期早于其直接上级的所有雇员。
+▪ --3．列出所有部门名称及雇员
+▪ --4．列出所有CLERK‛（办事员）的姓名及其部门名称。
+▪ --5．列出SALES（销售部门）的雇员的姓名，假定不知道销售部的部门编号。
+▪ --6．列出在每个部门工作的雇员的数量以及其他信息。
+▪ --7．列出所有雇员的雇员名称、部门名称和薪金。
+▪ --8. 求出部门编号为20的雇员名、部门名、薪水等级
+*/
+select * from emp;
+select * from dept;
+--列出所有雇员的姓名及其上级的姓名
+select e.ename, m.ename from emp e join emp m on e.mgr = m.empno;
+
+--列出入职日期早于其直接上级的所有雇员
+--1.求出管理员和入职日期（t1）
+select distinct e.mgr, m.hiredate from emp e join emp m on e.mgr = m.empno;
+--2.雇员表中每个雇员的入职日期和t1表上级入职日期进行比较
+select e.ename
+  from emp e
+  join (select distinct e.mgr, m.hiredate
+          from emp e
+          join emp m
+            on e.mgr = m.empno) t1
+    on e.mgr = t1.mgr
+ where e.hiredate < t1.hiredate;
+
+--列出所有部门名称及雇员
+--1.列出所有部门名称和部门编号
+select d.deptno, d.dname from dept d;
+--2.列出所有雇员和部门编号
+select e.deptno, e.ename from emp e;
+--3.连接两表
+select d.dname, e.ename
+  from (select e.deptno, e.ename from emp e) e
+ right outer join (select d.deptno, d.dname from dept d) d
+    on e.deptno = d.deptno;
+
+--列出所有CLERK‛（办事员）的姓名及其部门名称
+--1.列出所有CLERK‛（办事员）的姓名和部门编号(t1)
+select e.ename,e.deptno from emp e where e.job='CLERK';
+--2.关联部门表和t1
+select t1.ename, d.dname
+  from dept d natural
+  join (select e.ename, e.deptno from emp e where e.job = 'CLERK') t1;
+       
+--列出SALES（销售部门）的雇员的姓名，假定不知道销售部的部门编号
+--方法一
+--1.dept表中SALES的部门编号
+select d.deptno from dept d where d.dname = to_char('SALES');
+--2.部门编号为SALES的部门编号的雇员名字
+select e.ename
+  from emp e
+ where e.deptno =
+       (select d.deptno from dept d where d.dname = 'SALES');
+--方法二
+select ename from emp natural join dept d where d.dname = 'SALES';
+
+--列出在每个部门工作的雇员的数量以及其他信息
+--1.列出在每个部门工作的雇员的数量和部门编号
+select e.deptno,count(e.ename) from emp e group by e.deptno;
+--2.关联dept表，列出部门信息
+select *
+  from dept d
+  left outer join((select e.deptno, count(e.ename)
+                     from emp e
+                    group by e.deptno) t)
+    on d.deptno = t.deptno;
+
+--列出所有雇员的雇员名称、部门名称和薪金
+--方法一
+--1.列出所有雇员的雇员名称、部门编号和薪金
+select e.ename, e.deptno, e.sal + nvl(e.comm, 0) "MONEY" from emp e;
+--2.关联dept表和t1，获得部门名称
+select t1.ename, d.dname, t1.MONEY
+  from dept d natural
+  join (select e.ename, e.deptno, e.sal + nvl(e.comm, 0) "MONEY" from emp e) t1;
+--方法二
+select ename, dname, e.sal + nvl(e.comm, 0) "MONEY"
+  from emp e
+  join dept d
+    on e.deptno = d.deptno;
+
+--求出部门编号为20的雇员名、部门名、薪水等级
+--方法一
+--1.求出部门编号为20的雇员名、部门编号、薪水
+select e.ename, e.deptno, e.sal from emp e where e.deptno = 20;
+--2.t1表与salgrade表进行关联,求得薪水等级
+select t1.ename, t1.deptno, sg.grade
+  from salgrade sg
+  join (select e.ename, e.deptno, e.sal from emp e where e.deptno = 20) t1
+    on t1.sal between sg.losal and sg.hisal;
+--3.t2表与dept表进行关联，求得部门名
+select t2.ename, d.dname, t2.grade
+  from dept d natural
+  join (select t1.ename, t1.deptno, sg.grade
+          from salgrade sg
+          join (select e.ename, e.deptno, e.sal
+                 from emp e
+                where e.deptno = 20) t1
+            on t1.sal between sg.losal and sg.hisal) t2;
+--方法二
+select ename, dname, grade
+  from emp e
+  join dept d
+    on d.deptno = e.deptno
+  join salgrade sg
+    on e.sal between sg.losal and sg.hisal
+ where e.deptno = 20;
+
+
+
+
+

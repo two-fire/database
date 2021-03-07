@@ -1,0 +1,295 @@
+﻿--函数的测试
+/*
+组函数又称为聚合函数，输入多个值，最终只会返回一个值
+组函数仅可用于选择列表或者查询的having子句
+*/
+
+--查询所有员工的薪水总和
+select sum(sal) from emp;
+--查看表中有多少条记录
+select count(*) cou from emp；
+--查看人数大于3的部门的部门编号
+select deptno,count(*) from emp group by deptno having count(*) >3;
+--错误，where语句后面的只能是表中已有的字段，而函数得到的字段是虚拟表字段
+select deptno,count(*) from emp group by deptno where count(*) >3;
+
+/*
+单行函数，输入一个值，输出一个值
+*/
+--字符函数
+--concat：表示字符串的连接，等同于 \\
+select concat('my name is ',ename) from emp;
+--将字符串的每个首字母大写
+select initcap('eq a') from dual; // Eq A
+--将字符串全部转换为大写
+select upper(ename) from emp;
+--将字符串全部转换为小写
+select lower(ename) from emp;
+--填充字符串 
+--规定字符串长度为10左端用*补全
+select lpad(ename,10,'*') from emp;
+--规定字符串长度为10右端用*补全
+select rpad(ename,10,'*') from emp;
+--去空格
+select trim(ename) from emp;
+select ltrim(ename) from emp;
+select rtrim(ename) from emp;
+--查找指定字符串的位置
+select instr('ABCDABC','BC') from dual; -- 结果为2
+--查看字符串长度
+select length(ename) from emp;
+--替换操作
+select replace('aabbd','aa','hehe') from emp;
+/*
+substr：提取字符串的一部分
+       a代表第几个位置
+       b代表长度
+       0和1的效果一样
+       用负数则从右边开始数第几个位置
+*/
+select substr('abcde',0,2) from emp; --ab
+select substr('abcde',1,2) from emp; --ab
+select substr('abcde',-5,2) from dual; --ab
+
+--数值函数
+--进行四舍五入运算，可以指定小数部分位数
+select round(123.123,2) from dual;--结果为123.12
+--截断数据，按照位数直接截取，不会进行其他操作
+select trunc(123.128,2) from dual;
+--取模操作
+select mod(10,4) from dual; --结果为2 10 mod 4 = 2
+select mod(-10,4) from dual;  --结果为-2 
+--向上取整
+select ceil(123.12) from dual;
+--向下取整
+select floor(123.56) from dual;
+select floor(-123.12) from dual;
+select trim(both 'x' from 'xxxsdfxsdfx') from dual;--sdfxsdf
+--绝对值
+select abs(-123.56) from dual; --123.56
+--获取正负值
+select sign(100) from dual; --1
+--x的y次幂
+select power(2,4) from dual; --16
+
+--日期函数
+--获取当前系统时间
+select sysdate from dual; --2021/2/6 10:13:18
+--添加指定的月份
+--当前日期增加2个月
+select sysdate 当前日期,add_months(sysdate,2) add_months from dual; 
+--返回输入日期 所在月份的最后一天
+select last_day(sysdate) from dual;--2021/2/28 10:13:50
+--两个日期相隔的月份 trunc截断
+select trunc(months_between(sysdate,hiredate),3) from emp;
+--返回四舍五入的第一天
+select sysdate 当时日期,
+round(sysdate) 最近0点日期,
+round(sysdate,'day') 最近星期日,
+round(sysdate,'month') 最近月初,
+round(sysdate,'q') 最近季初日期, 
+round(sysdate,'year') 最近年初日期 from dual;
+--返回下周的星期几的日期
+select next_day(sysdate,'星期一') from dual;
+
+--提取日期中的时间
+select 
+extract(hour from timestamp '2001-2-16 2:38:40 ' ) 小时,
+extract(minute from timestamp '2001-2-16 2:38:40 ' ) 分钟,
+extract(second from timestamp '2001-2-16 2:38:40 ' ) 秒,
+extract(DAY from timestamp '2001-2-16 2:38:40 ' ) 日,
+extract(MONTH from timestamp '2001-2-16 2:38:40 ' ) 月,
+extract(YEAR from timestamp '2001-2-16 2:38:40 ' ) 年
+ from dual;
+--返回日期的时间戳
+select localtimestamp from dual; --06-2月 -21 10.30.05.137000 上午
+select current_date from dual;--2021/2/6 10:29:50
+select current_timestamp from dual; --06-2月 -21 10.30.28.952000 上午 +08:00
+--给指定的时间单位增加数值
+select
+trunc(sysdate)+(interval '1' second), --加1秒(1/24/60/60)
+trunc(sysdate)+(interval '1' minute), --加1分钟(1/24/60)
+trunc(sysdate)+(interval '1' hour), --加1小时(1/24)
+trunc(sysdate)+(INTERVAL '1' DAY),  --加1天(1)
+trunc(sysdate)+(INTERVAL '1' MONTH), --加1月
+trunc(sysdate)+(INTERVAL '1' YEAR), --加1年
+trunc(sysdate)+(interval '01:02:03' hour to second), --加指定小时到秒
+trunc(sysdate)+(interval '01:02' minute to second), --加指定分钟到秒
+trunc(sysdate)+(interval '01:02' hour to minute), --加指定小时到分钟
+trunc(sysdate)+(interval '2 01:02' day to minute) --加指定天数到分钟
+from dual;
+-- 日期和日期时间算术
+--增加2个月
+select sysdate+2 from dual; 
+--两个日期相减以便得到他们相差多少天
+select sysdate,
+       round((sysdate - to_date('2021/2/28', 'yyyy/mm/dd')) / 7) weeks
+  from dual; -- -3
+
+/*
+转换函数
+   在oracle中，存在数值的隐式转换和显示转换。
+   隐式转换
+       隐式转换指的是字符串可以转换为数值或者日期。
+       尽管数据类型之间可以进行隐式转换，仍建议使用显示转换函数
+   显示转换
+       当由数值或者日期转换为字符串的时候，必须规定格式
+*/
+select '999'+10 from dual; -- 1009
+--date：to_char
+select to_char(sysdate,'YYYY-MM-DD HH24:MI:SS') from dual; -- 2021-02-06 11:40:26
+--number：to_char
+--9：占位符 
+select to_char(123.456789,'9999.99') from dual; -- 123.46
+--0：填充0占位符 
+--.：显示本小数点
+select to_char(123.456789,'0000.00') from dual;-- 0123.46
+--$：显示美元符号
+select to_char(123.456789,'$0000.00') from dual;-- $0123.46
+--L：显示本地货币符号
+select to_char(123.456789,'L0000.00') from dual;-- ￥0123.46
+--,：显示千分位符号
+select to_char(12345.456789,'000,000,0.00') from dual;--  001,234,5.46
+
+--to_date：转换之后都是固定的格式
+select to_date('2019-10-10 10:10:10','YYYY-MM-DD HH24:MI:SS') from dual; --2019/10/10 10:10:10
+--to_number：转成数字
+select to_number('123,456.789','999,999.999') from dual; -- 123456.789
+
+--单行函数嵌套
+--显示没有上级管理（mgr为null）的公司首脑  
+select ename,nvl(to_char(mgr),'boss') from emp where mgr is null;
+--显示员工雇佣期满6个月后下一个星期五的日期
+select hiredate,next_day(add_months(hiredate,6),'星期五') from emp;
+
+--条件函数
+--decode，case when
+
+--给不同部门的人员涨薪，10部门涨10%，20部门涨20%，30部门涨30%
+select ename,
+       sal,
+       decode(deptno, 10, sal * 1.1, 20, sal * 1.2, 30, sal * 1.3)
+  from emp;
+
+select ename,
+       sal,
+       case deptno
+         when 10 then
+          sal * 1.1
+         when 20 then
+          sal * 1.2
+         else
+          sal * 1.3
+       end
+  from emp;
+--行转列
+create table test(
+   id number(10) primary key,
+   type number(10) ,
+   t_id number(10),
+   value varchar2(5)
+);
+insert into test values(100,1,1,'张三');
+insert into test values(200,2,1,'男');
+insert into test values(300,3,1,'50');
+
+insert into test values(101,1,2,'刘二');
+insert into test values(201,2,2,'男');
+insert into test values(301,3,2,'30');
+
+insert into test values(102,1,3,'刘三');
+insert into test values(202,2,3,'女');
+insert into test values(302,3,3,'10');
+
+select * from test;
+/*
+需求：将表的显示转换为
+
+姓名      性别     年龄
+--------- -------- ----
+张三       男        50
+*/
+select decode(type, 1, value) 姓名,
+       decode(type, 2, value) 性别,
+       decode(type, 3, value) 年龄
+  from test;
+--多行合并为一行
+select max(decode(type, 1, value)) 姓名,
+       max(decode(type, 2, value)) 性别,
+       max(decode(type, 3, value)) 年龄
+  from test group by t_id;
+
+/*
+组函数，一般情况下，组函数都要和group by组合使用
+
+常用的组函数有5个
+▪ avg()返回某列的平均值，只用于数值类型的数据
+▪ min()返回某列的最小值，适用于任何类型
+▪ max()返回某列的最大值，适用于任何类型
+▪ sum()返回某列值的和，只适合数值类型的数据
+▪ count()返回某列的行数，处理的时候会跳过空值而处理非空值
+       count一般用于获取表中的记录条数，获取条数的时候可以使用*或者
+     某一个具体的列，甚至可以使用纯数字来代替，但从效率角度考虑，建
+     议使用数字或者某一个具体的列，而不要使用*效率太低。
+组函数仅在选择列表和Having子句中有效
+*/
+select avg(sal) from emp;
+select min(sal) from emp;
+select max(sal) from emp;
+select sum(sal) from emp;
+select count(*) from emp;
+select count(ename) from emp;
+select count(1) from emp;
+--组函数不能处理null
+select * from emp;
+select avg(comm) from emp; --分母只算不为空的条目
+select avg(nvl(comm,0)) from emp; --分母为全部条目
+ 
+--group by，按照某些相同的值去进行分组操作
+--group进行分组操作的时候，可以指定一个列或者多个列，
+--但是使用了group by之后，选择列表中只能包含组函数的值或者group by的普通字段。
+-- 求每个部门的平均薪水
+select deptno,avg(sal) from emp group by deptno;
+--求平均薪水大于2000的部门
+select deptno, avg(sal) from emp group by deptno having avg(sal) > 2000;
+select deptno, sal, avg(sal) from emp group by deptno having avg(sal) > 2000;
+
+--Select子句顺序: select,from,where,group by,having,order by
+select deptno, avg(sal) from emp where sal is not null group by deptno having avg(sal) > 2000 order by avg(sal);
+
+--求部门下雇员的工资>2000 人数
+select deptno, count(ename) from emp where sal>2000 group by deptno;
+--求部门薪水最高
+select deptno,max(sal) from emp group by deptno;
+--求部门下雇员的工资>1200的人的平均薪资，且大于2000的部门，按顺序排列
+select avg(sal)
+  from emp
+ group by deptno
+having avg(sal) > 2000
+ order by avg(sal);
+--部门里面 工龄最小和最大的人找出来，知道姓名
+select deptno, min(hiredate), max(hiredate) from emp group by deptno;
+select ename, deptno
+  from emp 
+ where hiredate in (select min(hiredate) from emp group by deptno)
+    or hiredate in (select max(hiredate) from emp group by deptno);
+--正确写法 用到两张表的关联查询
+select mm2.deptno, e1.ename, e1.hiredate
+  from emp e1,
+       (select min(e.hiredate) mind, max(e.hiredate) maxd, e.deptno
+          from emp e
+         group by e.deptno) mm2
+ where (e1.hiredate = mm2.mind or e1.hiredate = mm2.maxd)
+   and e1.deptno = mm2.deptno;
+
+
+
+
+
+
+
+
+
+
+
+

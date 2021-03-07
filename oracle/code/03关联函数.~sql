@@ -1,0 +1,19 @@
+/*
+99语法
+– CROSS JOIN
+– NATURAL JOIN
+– USING子句
+– ON子句
+– LEFT OUTER JOIN
+– RIGHT OUTER JOIN
+– FULL OUTER JOIN
+– Inner outer join
+*/
+--cross join 等同于92语法中的笛卡尔积。少用它
+select * from emp cross join dept;
+--left (outer) join，会把左表中全部数据正常显示，右表没有对应的数据直接显示空即可
+select * from emp e left outer join dept d on e.deptno = d.deptno;
+select * from emp e,dept d where e.deptno = d.deptno(+);
+--right (outer) join，右外连接，和左外连接相反。outer可省略
+select * from emp e right outer join dept d on e.deptno = d.deptno;
+select * from emp e,dept d where e.deptno(+) = d.deptno;
